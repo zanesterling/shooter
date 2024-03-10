@@ -1,7 +1,7 @@
 use sdl2::keyboard::Keycode;
 
 use crate::dimensions::{WorldCoord as Coord, WorldPoint as Point, WorldRect as Rect};
-use crate::map::{Map, TilePoint, ToTilePoint};
+use crate::map::Map;
 use crate::sprite_sheet::SpriteKey;
 
 const TICKS_PER_SEC: u32 = 120; // TODO: Drop to 24 when fps and tps differ.
@@ -25,7 +25,10 @@ pub type UID = u32;
 pub struct State {
   pub players: Vec<Player>,
   pub units: Vec<Unit>,
+  pub bullets: Vec<Bullet>,
+
   pub map: Map,
+
   pub next_uid: UID,
 }
 
@@ -34,6 +37,7 @@ impl State {
     State {
       players: vec![],
       units: vec![],
+      bullets: vec![],
 
       map: Map::from_file("media/test-map.txt").expect("couldn't load the map"),
 
@@ -75,6 +79,16 @@ impl State {
         player.unit.pos = player.unit.pos + vel;
       }
     }
+
+    for bullet in self.bullets.iter_mut() {
+      bullet.pos = bullet.pos + bullet.heading * bullet.speed;
+      if self.map.rect_intersects_wall(bullet.bounding_box()) {
+        bullet.will_die_at_end_of_tick = true;
+      }
+
+      // TODO: Check for intersection with player and update health.
+    }
+    self.bullets.retain(|b| !b.will_die_at_end_of_tick);
   }
 
   fn next_uid(&mut self) -> UID {
@@ -132,5 +146,25 @@ impl Unit {
 
   pub fn window_rad(&self) -> u32 {
     self.rad().0 as u32
+  }
+}
+
+pub struct Bullet {
+  pub uid: UID,
+  pub pos: Point,
+  pub heading: Point,
+  pub speed: Coord,
+  pub rad: Coord,
+
+  pub will_die_at_end_of_tick: bool,
+}
+
+impl Bullet {
+  fn bounding_box(&self) -> Rect {
+    Rect {
+      top_left: Point::new(self.pos.x - self.rad, self.pos.y - self.rad),
+      width: self.rad,
+      height: self.rad,
+    }
   }
 }
