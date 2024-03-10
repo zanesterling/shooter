@@ -25,7 +25,7 @@ use std::process::exit;
 use std::thread::sleep;
 use std::time::{Duration, Instant};
 
-use crate::dimensions::{DisplayPoint, ToWorld, WindowPoint, WorldCoord, WorldPoint};
+use crate::dimensions::{ToWorld, WindowPoint, WorldCoord, WorldPoint};
 use crate::draw::{draw_frame, CachingTextRenderer};
 use crate::sprite_sheet::SpriteSheet;
 
@@ -58,7 +58,6 @@ struct State<'canvas, 'b> {
   game: game::State,
 
   // Interaction state.
-  cursor_state: CursorState,
   key_state: KeyState,
   camera_pos: WorldPoint,
   mouse_pos: WindowPoint,
@@ -78,7 +77,6 @@ impl<'canvas, 'b> State<'canvas, 'b> {
       running: true,
       game: game::State::level1(),
 
-      cursor_state: CursorState::None,
       key_state: KeyState::new(),
       camera_pos: WorldPoint::new(WorldCoord(0.), WorldCoord(0.)),
       // This is wrong, but will be set on the next MouseMotion event.
@@ -91,11 +89,6 @@ impl<'canvas, 'b> State<'canvas, 'b> {
   pub fn camera_pos(&self) -> WorldPoint {
     self.camera_pos
   }
-}
-
-#[derive(Clone)]
-enum CursorState {
-  None,
 }
 
 #[allow(dead_code)]
@@ -273,10 +266,9 @@ fn handle_event(state: &mut State, _canvas: &mut Canvas<Window>, event: Event) {
       mouse_btn: MouseButton::Left,
       ..
     } => {
-      match &state.cursor_state {
-        _ => {
-          // TODO: Left-click inputs.
-        }
+      for player in state.game.players.iter_mut() {
+        // TODO: When using gamepads, separate out who's who.
+        player.unit.shooting = true;
       }
     }
     Event::MouseButtonUp {
@@ -285,15 +277,21 @@ fn handle_event(state: &mut State, _canvas: &mut Canvas<Window>, event: Event) {
       mouse_btn: MouseButton::Left,
       ..
     } => {
-      state.cursor_state = CursorState::None;
+      for player in state.game.players.iter_mut() {
+        // TODO: When using gamepads, separate out who's who.
+        player.unit.shooting = false;
+      }
     }
 
     Event::MouseMotion {
       x, y, xrel, yrel, ..
-    } => match &mut state.cursor_state {
-      CursorState::None => {}
-      _ => {}
-    },
+    } => {
+      let mouse_pos_world = WindowPoint::new(x, y).to_world(state.camera_pos);
+      for player in state.game.players.iter_mut() {
+        // TODO: When using gamepads, separate out who's who.
+        player.unit.aim_at(mouse_pos_world);
+      }
+    }
 
     Event::KeyDown {
       repeat: false,

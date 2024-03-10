@@ -14,6 +14,7 @@ use crate::State;
 const EMPTY_TILE_COLOR: Color = Color::RGB(40, 42, 54);
 const OBSTACLE_COLOR: Color = Color::RGB(255, 184, 108);
 const UNIT_COLOR: Color = Color::RGB(255, 121, 198);
+const BULLET_COLOR: Color = Color::RGB(255, 121, 0);
 
 const COLOR_WHITE: Color = Color::RGB(248, 248, 242);
 
@@ -40,6 +41,11 @@ pub fn draw_frame(canvas: &mut Canvas<Window>, state: &mut State) {
   }
   for unit in state.game.units.iter() {
     draw_unit(canvas, state, unit);
+  }
+  for bullet in state.game.bullets.iter() {
+    canvas.set_draw_color(BULLET_COLOR);
+    let bounds = bullet.bounding_box();
+    let _ = canvas.fill_rect(bounds.to_window_rect(state.camera_pos));
   }
 }
 

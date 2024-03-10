@@ -58,12 +58,17 @@ impl State {
       },
       unit: Unit {
         uid,
+        sprite_key: "newt_gingrich".to_string(),
+
         pos: Point::new(Coord(100.0), Coord(100.0)),
+        heading: Point::new(Coord(1.0), Coord(0.0)),
         move_dir: Point::new(Coord(0.0), Coord(0.0)),
         rad: Coord(10.0),
         base_speed: Coord(300.0),
 
-        sprite_key: "newt_gingrich".to_string(),
+        shooting: false,
+        ticks_per_shot: TICKS_PER_SEC / 2,
+        ticks_to_shot: 0,
       },
     });
 
@@ -78,10 +83,27 @@ impl State {
       if !self.map.rect_intersects_wall(new_bounds) {
         player.unit.pos = player.unit.pos + vel;
       }
+
+      if player.unit.shooting && player.unit.ticks_to_shot == 0 {
+        let heading = player.unit.heading;
+        self.bullets.push(Bullet {
+          pos: player.unit.pos + heading * player.unit.rad * Coord(1.1),
+          heading,
+          rad: Coord(2.0),
+          speed: Coord(500.0),
+          will_die_at_end_of_tick: false,
+        });
+        player.unit.ticks_to_shot = player.unit.ticks_per_shot;
+      }
+
+      if player.unit.ticks_to_shot > 0 {
+        player.unit.ticks_to_shot -= 1;
+      }
     }
 
     for bullet in self.bullets.iter_mut() {
-      bullet.pos = bullet.pos + bullet.heading * bullet.speed;
+      let vel = bullet.heading * bullet.speed * Coord(TICK_TIME);
+      bullet.pos = bullet.pos + vel;
       if self.map.rect_intersects_wall(bullet.bounding_box()) {
         bullet.will_die_at_end_of_tick = true;
       }
@@ -116,11 +138,17 @@ pub struct PlayerKeys {
 
 pub struct Unit {
   pub uid: UID,
+  pub sprite_key: SpriteKey,
+
   pub pos: Point,
+  pub heading: Point,
   pub move_dir: Point,
   pub rad: Coord,
   pub base_speed: Coord,
-  pub sprite_key: SpriteKey,
+
+  pub shooting: bool,
+  pub ticks_per_shot: u32,
+  pub ticks_to_shot: u32,
 }
 
 impl Unit {
@@ -147,10 +175,18 @@ impl Unit {
   pub fn window_rad(&self) -> u32 {
     self.rad().0 as u32
   }
+
+  pub fn aim_at(&mut self, target: Point) {
+    let heading_raw = target - self.pos;
+    if heading_raw.x == Coord(0.0) && heading_raw.y == Coord(0.0) {
+      // Then avoid a zero heading by keeping the old heading.
+    } else {
+      self.heading = heading_raw.normalized();
+    }
+  }
 }
 
 pub struct Bullet {
-  pub uid: UID,
   pub pos: Point,
   pub heading: Point,
   pub speed: Coord,
@@ -160,11 +196,11 @@ pub struct Bullet {
 }
 
 impl Bullet {
-  fn bounding_box(&self) -> Rect {
+  pub fn bounding_box(&self) -> Rect {
     Rect {
       top_left: Point::new(self.pos.x - self.rad, self.pos.y - self.rad),
-      width: self.rad,
-      height: self.rad,
+      width: self.rad * Coord(2.),
+      height: self.rad * Coord(2.),
     }
   }
 }
