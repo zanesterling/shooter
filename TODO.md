@@ -1,0 +1,17 @@
+- [-] Unit movement
+	- [X] waypoints
+	- [X] shift-click to queue up movements
+	- [X] grid pathfinding
+	- [ ] circle-based collision detection
+	- [ ] grid-free pathfinding
+- [-] Abilities!
+	- [X] representation for abilities
+	- [X] key-control interface
+	- [X] display for abilities
+	- [ ] click interface
+- [X] Structures
+	- [ ] making structures
+	- [X] unit production
+	- [ ] research
+	- [ ] choosing active unit (set) out of selected
+- [ ] Resource gathering
