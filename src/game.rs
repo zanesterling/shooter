@@ -71,6 +71,28 @@ impl State {
         ticks_to_shot: 0,
       },
     });
+    state.players.push(Player {
+      keys: PlayerKeys {
+        up: Keycode::Up,
+        down: Keycode::Down,
+        left: Keycode::Left,
+        right: Keycode::Right,
+      },
+      unit: Unit {
+        uid,
+        sprite_key: "newt_gingrich".to_string(),
+
+        pos: Point::new(Coord(100.0), Coord(400.0)),
+        heading: Point::new(Coord(1.0), Coord(0.0)),
+        move_dir: Point::new(Coord(0.0), Coord(0.0)),
+        rad: Coord(10.0),
+        base_speed: Coord(300.0),
+
+        shooting: false,
+        ticks_per_shot: TICKS_PER_SEC / 2,
+        ticks_to_shot: 0,
+      },
+    });
 
     state
   }
