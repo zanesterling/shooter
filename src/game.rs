@@ -1,8 +1,11 @@
+use sdl2::keyboard::Keycode;
+
 use crate::dimensions::{WorldCoord as Coord, WorldPoint as Point, WorldRect as Rect};
 use crate::map::{Map, TilePoint, ToTilePoint};
 use crate::sprite_sheet::SpriteKey;
 
 const TICKS_PER_SEC: u32 = 120; // TODO: Drop to 24 when fps and tps differ.
+const TICK_TIME: f32 = 1.0 / (TICKS_PER_SEC as f32);
 
 #[derive(Clone, Copy, PartialEq)]
 pub struct GameDur {
@@ -20,6 +23,7 @@ impl GameDur {
 pub type UID = u32;
 
 pub struct State {
+  pub players: Vec<Player>,
   pub units: Vec<Unit>,
   pub map: Map,
   pub next_uid: UID,
@@ -28,6 +32,7 @@ pub struct State {
 impl State {
   pub fn blank() -> State {
     State {
+      players: vec![],
       units: vec![],
 
       map: Map::from_file("media/test-map.txt").expect("couldn't load the map"),
@@ -40,20 +45,36 @@ impl State {
     let mut state = State::blank();
 
     let uid = state.next_uid();
-    state.units.push(Unit {
-      uid,
-      pos: Point::new(Coord(100.), Coord(100.)),
-      rad: Coord(10.0),
-      base_speed: Coord(1.0),
+    state.players.push(Player {
+      keys: PlayerKeys {
+        up: Keycode::W,
+        down: Keycode::S,
+        left: Keycode::A,
+        right: Keycode::D,
+      },
+      unit: Unit {
+        uid,
+        pos: Point::new(Coord(100.0), Coord(100.0)),
+        move_dir: Point::new(Coord(0.0), Coord(0.0)),
+        rad: Coord(10.0),
+        base_speed: Coord(300.0),
 
-      sprite_key: "newt_gingrich".to_string(),
+        sprite_key: "newt_gingrich".to_string(),
+      },
     });
 
     state
   }
 
   pub fn tick(&mut self) {
-    // TODO: Implement this
+    for player in self.players.iter_mut() {
+      let vel = player.unit.move_dir.normalized() * Coord(TICK_TIME) * player.unit.base_speed;
+      let new_pos = player.unit.pos + vel;
+      let new_bounds = player.unit.bounding_box_at(new_pos);
+      if !self.map.rect_intersects_wall(new_bounds) {
+        player.unit.pos = player.unit.pos + vel;
+      }
+    }
   }
 
   fn next_uid(&mut self) -> UID {
@@ -66,9 +87,23 @@ impl State {
   }
 }
 
+pub struct Player {
+  pub keys: PlayerKeys,
+  pub unit: Unit,
+}
+
+#[derive(Debug)]
+pub struct PlayerKeys {
+  pub up: Keycode,
+  pub down: Keycode,
+  pub left: Keycode,
+  pub right: Keycode,
+}
+
 pub struct Unit {
   pub uid: UID,
   pub pos: Point,
+  pub move_dir: Point,
   pub rad: Coord,
   pub base_speed: Coord,
   pub sprite_key: SpriteKey,

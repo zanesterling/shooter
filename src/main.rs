@@ -301,15 +301,40 @@ fn handle_event(state: &mut State, _canvas: &mut Canvas<Window>, event: Event) {
       ..
     } => {
       state.key_state.update_shift_alt_ctrl(keycode, true);
-      match keycode {
-        Some(_keycode) => {}
-        _ => {}
+      if let Some(keycode) = keycode {
+        for player in state.game.players.iter_mut() {
+          if keycode == player.keys.up {
+            player.unit.move_dir.y.0 -= 1.0;
+          }
+          if keycode == player.keys.down {
+            player.unit.move_dir.y.0 += 1.0;
+          }
+          if keycode == player.keys.left {
+            player.unit.move_dir.x.0 -= 1.0;
+          }
+          if keycode == player.keys.right {
+            player.unit.move_dir.x.0 += 1.0;
+          }
+        }
       }
     }
     Event::KeyUp { keycode, .. } => {
       state.key_state.update_shift_alt_ctrl(keycode, false);
-      match keycode {
-        _ => {}
+      if let Some(keycode) = keycode {
+        for player in state.game.players.iter_mut() {
+          if keycode == player.keys.up {
+            player.unit.move_dir.y.0 += 1.0;
+          }
+          if keycode == player.keys.down {
+            player.unit.move_dir.y.0 -= 1.0;
+          }
+          if keycode == player.keys.left {
+            player.unit.move_dir.x.0 += 1.0;
+          }
+          if keycode == player.keys.right {
+            player.unit.move_dir.x.0 -= 1.0;
+          }
+        }
       }
     }
 

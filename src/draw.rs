@@ -35,6 +35,9 @@ pub fn draw_frame(canvas: &mut Canvas<Window>, state: &mut State) {
     ));
   }
 
+  for player in state.game.players.iter() {
+    draw_unit(canvas, state, &player.unit);
+  }
   for unit in state.game.units.iter() {
     draw_unit(canvas, state, unit);
   }

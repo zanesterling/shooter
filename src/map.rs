@@ -162,6 +162,15 @@ impl Map {
       .map(|(x, y)| self.get_tile(TilePoint { x, y }))
       .flatten()
   }
+
+  pub fn rect_intersects_wall(&self, rect: Rect) -> bool {
+    for tile in self.tiles_overlapping_rect(rect) {
+      if tile.tile == GridTile::Obstacle {
+        return true;
+      }
+    }
+    false
+  }
 }
 
 pub struct MapTileIterator<'a> {
